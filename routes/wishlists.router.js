@@ -293,7 +293,7 @@ router
                     const savedWishlist = await wishlist.save();
 
                     // return setTimeout(() => {
-                    successResponse(res, {
+                    return successResponse(res, {
                         success: true,
                         data: {
                             estimated_price: savedWishlist._doc.estimated_price,
@@ -304,6 +304,41 @@ router
                             message: `Removed from ${wishlist.name.name}`,
                         },
                     });
+                }
+
+                case 'MOVE_WISHLIST_ITEM': {
+                    const { wishlist, item } = body;
+
+                    try {
+                        // Step 1; Removing the item from the original wishlist
+                        req.wishlist.data = req.wishlist.data.filter(
+                            (product) => product.book._id.toString() !== item._id
+                        );
+
+                        // ! Check if this even works
+                        await req.wishlist.save();
+
+                        // Step 2: Adding the item to the desired wishlist
+                        const another_wishlist = await Wishlists.findOne({
+                            _id: wishlist.destination._id,
+                        });
+                        another_wishlist.data = [...another_wishlist.data, { book: item }];
+                        await another_wishlist.save();
+
+                        return successResponse(res, {
+                            success: true,
+                            data: {
+                                wishlist: item,
+                            },
+                            toast: {
+                                status: 'success',
+                                message: `${item.name} is moved to ${wishlist.destination.name}`,
+                            },
+                        });
+                    } catch (error) {
+                        console.error(error);
+                        return next(CustomError.serverError(`Couldn't move the selected item`));
+                    }
                 }
 
                 default:
