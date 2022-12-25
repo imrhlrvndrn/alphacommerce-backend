@@ -1,3 +1,4 @@
+const util = require('util');
 const { CustomError } = require('../services');
 const Orders = require('../models/orders.model');
 const Users = require('../models/users.model');
@@ -10,7 +11,7 @@ const router = express.Router();
 
 router.route('/checkout').post(async (req, res, next) => {
     // Assuming the cart?.data is passed into the order_items
-    const {
+    let {
         order_items,
         user: { id, email, address },
     } = req.body;
@@ -22,6 +23,12 @@ router.route('/checkout').post(async (req, res, next) => {
         },
         quantity,
     }));
+    order_items = order_items.map(({ product_data }) => ({
+        _id: product_data.metadata.book_id,
+        name: product_data.name,
+        image: product_data.images[0],
+    }));
+    console.log('line_items =>', util.inspect(line_items, false, null, true));
     let customer;
 
     try {
@@ -38,7 +45,17 @@ router.route('/checkout').post(async (req, res, next) => {
                     address: JSON.stringify(address),
                 },
             });
-        else customer = { id: returned_user.stripe_customer_id };
+        else {
+            customer = await stripe.customers.update(returned_user.stripe_customer_id, {
+                metadata: {
+                    user_id: id,
+                    order_items: JSON.stringify(order_items),
+                    address: JSON.stringify(address),
+                },
+            });
+            console.log('Updated customer data => ', util.inspect(customer, false, null, true));
+            customer = { id: returned_user.stripe_customer_id };
+        }
     } catch (error) {
         console.error(error);
         return next(CustomError.serverError('Could not retrieve the user'));
@@ -54,7 +71,6 @@ router.route('/checkout').post(async (req, res, next) => {
                 setup_future_usage: 'on_session',
             },
             customer: customer.id,
-            //! Change the success redirect to /orders page
             success_url: `${process.env.CLIENT_URL}/orders?checkout_status=completed`,
             cancel_url: `${process.env.CLIENT_URL}/checkout`,
         });
@@ -86,10 +102,10 @@ const create_order = async (customer, data) => {
             customer_id: customer.id,
             payment_intent_id: data.payment_intent,
         },
-        items: order_items.map((item) => ({
-            book_id: item.product_data.metadata.book_id,
-            name: item.product_data.name,
-            image: item.product_data.images[0],
+        items: order_items.map(({ _id, name, image }) => ({
+            book_id: _id,
+            name,
+            image,
         })),
         total: data.amount_total / 100,
         shipping: { ...address },
