@@ -18,6 +18,10 @@ class CustomError extends Error {
         return new CustomError(401, 'failed', errorMessage);
     }
 
+    static badRequest(errorMessage = `Bad request`) {
+        return new CustomError(400, 'failed', errorMessage);
+    }
+
     static serverError(errorMessage = `Internal server error`) {
         return new CustomError(500, 'failed', errorMessage);
     }

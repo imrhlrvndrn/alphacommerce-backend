@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema(
     {
         entity: { type: String, required: true, default: 'User' },
+        stripe_customer_id: { type: String, default: '' },
         full_name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
@@ -44,6 +45,7 @@ const userSchema = new Schema(
             },
         ],
         cart: { type: Schema.Types.ObjectId, ref: 'Cart' },
+        orders: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
         wishlists: [{ type: Schema.Types.ObjectId, ref: 'Wishlist' }],
     },
     { timestamps: true }

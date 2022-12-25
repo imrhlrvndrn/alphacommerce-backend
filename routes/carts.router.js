@@ -68,7 +68,6 @@ router
     })
     .post(async (req, res, next) => {
         let {
-            cart,
             body: { type }, // Destructuring for all the cases
         } = req;
         try {
