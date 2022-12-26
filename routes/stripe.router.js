@@ -71,8 +71,8 @@ router.route('/checkout').post(async (req, res, next) => {
                 setup_future_usage: 'on_session',
             },
             customer: customer.id,
-            success_url: `${process.env.CLIENT_URL}/orders?checkout_status=completed`,
-            cancel_url: `${process.env.CLIENT_URL}/checkout`,
+            success_url: `${process.env.FRONTEND_URL}/orders?checkout_status=completed`,
+            cancel_url: `${process.env.FRONTEND_URL}/checkout`,
         });
         if (!session.url)
             return next(

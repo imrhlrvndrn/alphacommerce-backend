@@ -22,16 +22,11 @@ const stripeRoutes = require('./routes/stripe.router');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.set('Access-Control-Allow-Credentials', true);
 connectDb();
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 app.use('/stripe/webhook', express.raw({ type: '*/*' }));
 app.use(express.json());
 app.use(cookieParser());
-// app.use((req, res, next) => {
-//     req.user = { id: '' };
-//     next();
-// });
 app.use('/auth', authRoutes);
 app.use('/books', bookRoutes);
 app.use('/carts', cartRoutes);
@@ -41,8 +36,8 @@ app.use('/orders', orderRoutes);
 app.use('/stripe', stripeRoutes);
 app.use('/wishlists', wishlistRoutes);
 app.get('/', (req, res) => {
-    res.json({ message: 'Backend is successfully deployed!!! 🥳' });
+    res.json({ message: 'Welcome to AlphaReads API Endpoint!!! 🥳' });
 });
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server is running on PORT ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on PORT [${PORT}]`));

@@ -5,7 +5,7 @@ const mongooseSave = async (model) => await model.save();
 
 const createWishlists = async (wishlists) => {
     let savedWishlists = [];
-    
+
     wishlists.forEach(async (item) => {
         let newWishlist = null;
         const wishlistExists = await Wishlists.findOne({

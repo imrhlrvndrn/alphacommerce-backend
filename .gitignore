@@ -16,6 +16,7 @@ ideation.md
 README.md
 *.env
 data.js
+package-lock.json
 
 # misc
 .DS_Store
