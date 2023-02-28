@@ -28,13 +28,10 @@ router.route('/checkout').post(async (req, res, next) => {
         name: product_data.name,
         image: product_data.images[0],
     }));
-    console.log('line_items =>', util.inspect(line_items, false, null, true));
     let customer;
 
     try {
         const returned_user = await Users.findOne({ _id: id }).select('stripe_customer_id');
-        console.log('user stripe id =>', returned_user);
-        console.log('user address => ', address);
         if (!returned_user.stripe_customer_id)
             customer = await stripe.customers.create({
                 name: 'Rahul Ravindran',
@@ -53,7 +50,6 @@ router.route('/checkout').post(async (req, res, next) => {
                     address: JSON.stringify(address),
                 },
             });
-            console.log('Updated customer data => ', util.inspect(customer, false, null, true));
             customer = { id: returned_user.stripe_customer_id };
         }
     } catch (error) {
@@ -64,7 +60,6 @@ router.route('/checkout').post(async (req, res, next) => {
     try {
         const session = await stripe.checkout.sessions.create({
             line_items,
-            // customer_email: email,
             payment_method_types: ['card'],
             mode: 'payment',
             payment_intent_data: {
@@ -141,7 +136,6 @@ router.route('/webhook').post(express.raw({ type: 'application/json' }), async (
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
         // ! Remove the 2nd condition
         if (event && event.type === 'checkout.session.completed') {
-            console.log('Webhook event => ', event);
             event_data = event.data.object;
             event_type = event.type;
         }
@@ -152,25 +146,13 @@ router.route('/webhook').post(express.raw({ type: 'application/json' }), async (
     try {
         if (event_type === 'checkout.session.completed') {
             const customer_data = await stripe.customers.retrieve(event_data.customer);
-            console.log('customer data => ', customer_data);
             const saved_order = await create_order(customer_data, event_data);
-            console.log('saved order details => ', saved_order);
             res.redirect();
         }
     } catch (error) {
         console.error(error);
         return next(CustomError.serverError('The webhook event was interrupted'));
     }
-    // Handle the event
-    // switch (event.type) {
-    //     case 'payment_intent.succeeded':
-    //         const paymentIntent = event.data.object;
-    //         // Then define and call a function to handle the event payment_intent.succeeded
-    //         break;
-    //     // ... handle other event types
-    //     default:
-    //         console.log(`Unhandled event type ${event.type}`);
-    // }
 
     // Return a 200 res to acknowledge receipt of the event
     res.send();

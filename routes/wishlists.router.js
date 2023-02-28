@@ -3,17 +3,12 @@ const authMiddleware = require('../middlewares');
 const Users = require('../models/users.model');
 const Wishlists = require('../models/wishlists.model');
 const { CustomError } = require('../services');
-const { mongooseSave, createWishlists } = require('../utils');
-const { errorResponse, summation, successResponse } = require('../utils/errorHandlers');
+const { successResponse } = require('../utils/errorHandlers');
 
 router
     .route('/')
     .get(async (req, res, next) => {
         try {
-            // ! req.auth will be injected by the auth middleware => authMiddleware
-            // console.log('Request user: ', req.auth);
-            // if (!req.auth) throw new CustomError('401', 'failed', 'Unauthorized: Access Denied');
-
             const returnedWishlists = await Wishlists.find({ user: req.cookies.userId }).select(
                 req.params.select
             );
@@ -29,7 +24,7 @@ router
                 },
             });
         } catch (error) {
-            console.log('Error => ', error);
+            console.error('Error => ', error);
             return next(errror);
         }
     })
@@ -119,8 +114,6 @@ router
                         savedWishlists = [...savedWishlists, newWishlist];
                     });
 
-                    console.log('Collection of all savedWishlists => ', savedWishlists);
-
                     return setTimeout(() => {
                         successResponse(res, {
                             status: 200,
@@ -151,7 +144,6 @@ router
                         returnedWishlists.push(removedWishlist);
                     });
 
-                    console.log('deleted wishlists => ', returnedWishlists);
                     return setTimeout(() => {
                         successResponse(res, {
                             status: 200,
@@ -159,7 +151,7 @@ router
                             data: returnedWishlists,
                             toast: {
                                 status: 'success',
-                                message: 'Deleted wishlist',
+                                message: 'Deleted wishlists',
                             },
                         });
                     }, 3000);
@@ -176,7 +168,6 @@ router
 router.param('wishlistId', async (req, res, next, wishlistId) => {
     const { select, populate } = req.body;
     try {
-        console.log('wishlist id from router.param() middleware', wishlistId);
         const returnedWishlist = await Wishlists.findOne({ _id: wishlistId })
             .select(select || [])
             .populate(
@@ -185,7 +176,6 @@ router.param('wishlistId', async (req, res, next, wishlistId) => {
                 }
             );
         if (!returnedWishlist) return next(CustomError.notFound('Wishlist not found!'));
-        console.log('wishlist from routerParam()', returnedWishlist._doc.data);
 
         req.wishlist = returnedWishlist;
         next();
@@ -338,6 +328,14 @@ router
                     } catch (error) {
                         console.error(error);
                         return next(CustomError.serverError(`Couldn't move the selected item`));
+                    }
+                }
+
+                case 'DELETE_WISHLIST': {
+                    try {
+                    } catch (error) {
+                        console.error(error);
+                        return next(CustomError.serverError("Couldn't delete the wishlist"));
                     }
                 }
 

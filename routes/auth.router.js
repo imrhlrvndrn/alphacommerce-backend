@@ -45,7 +45,7 @@ router.post('/login', async (req, res, next) => {
             },
             toast: {
                 status: 'success',
-                message: `You're successfully logged in`,
+                message: `Welcome back, ${user?.full_name}`,
             },
         });
     } catch (error) {

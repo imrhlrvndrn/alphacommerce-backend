@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { v4 } = require('uuid');
 const Carts = require('../models/carts.model');
 const { CustomError } = require('../services');
-const { getVariantPrice, errorResponse, summation, successResponse } = require('../utils');
+const { getVariantPrice, summation, successResponse } = require('../utils');
 
 router.route('/').post(async (req, res, next) => {
     const { body, cookies } = req;
@@ -33,7 +33,6 @@ router.route('/').post(async (req, res, next) => {
 router.param('cartId', async (req, res, next, cartId) => {
     try {
         const { body } = req;
-        console.log('Request cart => ', body.cart);
         const { select, populate } = body;
         const returnedCart = body.cart
             ? body.cart
@@ -112,19 +111,6 @@ router
 
                         cart.data = [...cart.data, newCartItems[0]];
                     } else {
-                        /*
-                            const userCart = [
-                                {_id:'book1', value: 'book1'},
-                                {_id:'book2', value: 'book2'},
-                                {_id:'book3', value: 'book3'}
-                            ];
-
-                            const guestCart = [
-                                {_id:'book1', value: 'bible1'},
-                                {_id:'book2', value: 'bible2'},
-                            ];
-                        */
-
                         // * @desc If guest cart contains the same cartItem in userCart data then it's updated w/ Guest Cart data
                         const updateGuestCartData = cart.data.map((item) => {
                             const index = newCartItems.findIndex(
@@ -169,13 +155,11 @@ router
 
                 case 'REMOVE_FROM_CART': {
                     const { _id, variant } = body;
-                    console.log('Req data => ', { _id, variant });
 
                     const cartItemToBeRemoved = cart.data.find(
                         (item) =>
                             item.book._id.toString() === _id && item.variant.type === variant.type
                     );
-                    console.log('Item to be removed => ', cartItemToBeRemoved);
                     if (!cartItemToBeRemoved)
                         return next(
                             CustomError.notFound(`Couldn't find the item in cart`, 'warning')
